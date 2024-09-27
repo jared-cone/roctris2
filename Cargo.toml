@@ -1,5 +1,5 @@
 [workspace]
-members = ["platform/crates/host", "platform/crates/roc_std"]
+members = ["platform/crates/host"]
 resolver = "2"
 
 [workspace.package]
