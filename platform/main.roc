@@ -1,7 +1,7 @@
 platform "host"
     requires {} { main : Task {} [Exit I32 Str]_ }
     exposes [
-        #        Path,
+        SomeEffect
     ]
     packages {}
     imports []

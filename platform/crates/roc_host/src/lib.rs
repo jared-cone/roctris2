@@ -5,6 +5,8 @@ use core::ffi::c_void;
 use core::mem::MaybeUninit;
 use roc_std::{RocResult, RocStr};
 
+mod some_type_glue;
+
 extern "C" {
     #[link_name = "roc__mainForHost_1_exposed_generic"]
     pub fn roc_main(output: *mut u8);
@@ -217,6 +219,8 @@ pub fn init() {
 
 #[no_mangle]
 pub extern "C" fn rust_main() -> i32 {
+    dbg!("IN RUST MAIN");
+
     init();
     let size = unsafe { roc_main_size() } as usize;
     let layout = Layout::array::<u8>(size).unwrap();
@@ -257,5 +261,17 @@ pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
     match out.into() {
         Ok(()) => 0,
         Err(exit_code) => exit_code,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_someEffect(from_roc: &some_type_glue::SomeType) -> RocResult<(), ()> {
+    dbg!("IN HERE");
+    match dbg!(from_roc) {
+        some_type_glue::SomeType::Hello => {
+            println!("Hello from Rust!");
+            RocResult::ok(())
+        }
+        _ => todo!(),
     }
 }
