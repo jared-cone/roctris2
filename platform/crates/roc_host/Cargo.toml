@@ -1,18 +1,13 @@
 [package]
-name = "host"
+name = "roc_host"
 authors = ["Jared Cone"]
 edition = "2021"
 license = "UPL-1.0"
 version = "0.0.1"
 
 [lib]
-name = "host"
+name = "roc_host"
 path = "src/lib.rs"
-crate-type = ["staticlib", "rlib"]
-
-[[bin]]
-name = "host"
-path = "src/main.rs"
 
 [dependencies]
 roc_std = { git = "https://github.com/roc-lang/roc.git" }
