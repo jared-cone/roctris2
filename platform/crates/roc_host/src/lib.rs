@@ -3,9 +3,9 @@
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::mem::MaybeUninit;
+//use roc_app::SomeType;
 use roc_std::{RocResult, RocStr};
-
-mod some_type_glue;
+use std::io::{ErrorKind, Write};
 
 extern "C" {
     #[link_name = "roc__mainForHost_1_exposed_generic"]
@@ -219,8 +219,6 @@ pub fn init() {
 
 #[no_mangle]
 pub extern "C" fn rust_main() -> i32 {
-    dbg!("IN RUST MAIN");
-
     init();
     let size = unsafe { roc_main_size() } as usize;
     let layout = Layout::array::<u8>(size).unwrap();
@@ -264,14 +262,46 @@ pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn roc_fx_someEffect(from_roc: &some_type_glue::SomeType) -> RocResult<(), ()> {
-    dbg!("IN HERE");
-    match dbg!(from_roc) {
-        some_type_glue::SomeType::Hello => {
-            println!("Hello from Rust!");
-            RocResult::ok(())
-        }
-        _ => todo!(),
+// ---------------- Stdout ----------------
+
+fn handleStdoutErr(io_err: std::io::Error) -> RocStr {
+    match io_err.kind() {
+        ErrorKind::BrokenPipe => "ErrorKind::BrokenPipe".into(),
+        ErrorKind::WouldBlock => "ErrorKind::WouldBlock".into(),
+        ErrorKind::WriteZero => "ErrorKind::WriteZero".into(),
+        ErrorKind::Unsupported => "ErrorKind::Unsupported".into(),
+        ErrorKind::Interrupted => "ErrorKind::Interrupted".into(),
+        ErrorKind::OutOfMemory => "ErrorKind::OutOfMemory".into(),
+        _ => format!("{:?}", io_err).as_str().into(),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stdoutLine(text: &RocStr) -> RocResult<(), RocStr> {
+    let stdout = std::io::stdout();
+
+    let mut handle = stdout.lock();
+
+    handle
+        .write_all(text.as_bytes())
+        .and_then(|()| handle.write_all("\n".as_bytes()))
+        .and_then(|()| handle.flush())
+        .map_err(handleStdoutErr)
+        .into()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stdoutPut(text: &RocStr) -> RocResult<(), RocStr> {
+    let string = text.as_str();
+    println!("{}", string);
+
+    let stdout = std::io::stdout();
+
+    let mut handle = stdout.lock();
+
+    handle
+        .write_all(text.as_bytes())
+        .and_then(|()| handle.flush())
+        .map_err(handleStdoutErr)
+        .into()
 }

@@ -1,7 +1,9 @@
 hosted PlatformTasks
     exposes [
-        someEffect
+        stdoutLine,
+        stdoutPut,
     ]
     imports []
 
-someEffect : [Hello, World, Two] -> Task {} {}
+stdoutLine : Str -> Task {} Str
+stdoutPut : Str -> Task {} Str

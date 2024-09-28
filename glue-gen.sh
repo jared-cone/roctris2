@@ -24,5 +24,11 @@ fi
 # Get the RustGlue spec path
 RUST_GLUE_SPEC="$ROC_ROOT_DIR/crates/glue/src/RustGlue.roc"
 
+# Check if the glue spec exists
+if [ ! -f "$RUST_GLUE_SPEC" ]; then
+    echo "RustGlue spec path '$RUST_GLUE_SPEC' does not exist."
+    exit 1
+fi
+
 # generate the glue
 roc glue "$RUST_GLUE_SPEC" platform/crates/ platform/main-glue.roc

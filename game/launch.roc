@@ -1,10 +1,11 @@
 app [main] { pf: platform "../platform/main.roc" }
 
-import pf.SomeEffect
+import pf.Stdout
 
 main : Task {} [Exit I32 Str]_
 main =
+    doTasks |> Task.mapErr (\_ -> Exit 1 "Failed")
 
-    SomeEffect.someEffect Hello |> Task.mapErr! \_ -> Exit 1 "Error"
-
-    Task.ok {}
+doTasks =
+    Stdout.line! "Hello"
+    Stdout.put! "X"

@@ -4,7 +4,7 @@
 set -euxo pipefail
 
 OUTPUT_DIR="./target"
-OUTPUT_BIN="$OUTPUT_DIR/game-launch"
+OUTPUT_BIN="$OUTPUT_DIR/host-build"
 mkdir -p "$OUTPUT_DIR"
-roc build --linker=legacy --output "$OUTPUT_BIN" ./game/launch.roc
+roc build --linker=legacy --output "$OUTPUT_BIN" ./platform/main-build.roc
 "$OUTPUT_BIN"
