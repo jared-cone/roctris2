@@ -17,3 +17,4 @@ roc_std = { path = "../roc_std" }
 #roc_app = { path = "../roc_app" }
 backtrace = "=0.3.69"
 libc = "=0.2.155"
+crossterm = "0.22"

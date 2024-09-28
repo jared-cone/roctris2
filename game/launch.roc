@@ -1,6 +1,7 @@
 app [main] { pf: platform "../platform/main.roc" }
 
 import pf.Stdout
+import pf.Terminal
 
 main : Task {} [Exit I32 Str]_
 main =
@@ -8,4 +9,7 @@ main =
 
 doTasks =
     Stdout.line! "Hello"
+    Terminal.setForecolor! 255 0 0
     Stdout.put! "X"
+    Terminal.resetForecolor! {}
+    Stdout.put! "Y"

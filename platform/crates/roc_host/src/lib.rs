@@ -4,8 +4,11 @@ use core::alloc::Layout;
 use core::ffi::c_void;
 use core::mem::MaybeUninit;
 //use roc_app::SomeType;
+//use crossterm;
 use roc_std::{RocResult, RocStr};
-use std::io::{ErrorKind, Write};
+//use std::io::ErrorKind;
+use std::io::Write;
+use std::time::Duration;
 
 extern "C" {
     #[link_name = "roc__mainForHost_1_exposed_generic"]
@@ -40,7 +43,13 @@ pub unsafe extern "C" fn roc_dealloc(c_ptr: *mut c_void, _alignment: u32) {
 
 #[no_mangle]
 pub unsafe extern "C" fn roc_panic(msg: &RocStr, tag_id: u32) {
-    //_ = crossterm::terminal::disable_raw_mode();
+    // _ = crossterm::terminal::disable_raw_mode();
+    // _ = crossterm::execute!(
+    //     std::io::stdout(),
+    //     crossterm::style::SetForegroundColor(crossterm::style::Color::Reset),
+    //     crossterm::style::SetBackgroundColor(crossterm::style::Color::Reset),
+    //     crossterm::cursor::Show
+    // );
     match tag_id {
         0 => {
             eprintln!("Roc crashed with:\n\n\t{}\n", msg.as_str());
@@ -262,22 +271,25 @@ pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
     }
 }
 
-// ---------------- Stdout ----------------
+// -------------------------------- Stdout --------------------------------
 
-fn handleStdoutErr(io_err: std::io::Error) -> RocStr {
-    match io_err.kind() {
-        ErrorKind::BrokenPipe => "ErrorKind::BrokenPipe".into(),
-        ErrorKind::WouldBlock => "ErrorKind::WouldBlock".into(),
-        ErrorKind::WriteZero => "ErrorKind::WriteZero".into(),
-        ErrorKind::Unsupported => "ErrorKind::Unsupported".into(),
-        ErrorKind::Interrupted => "ErrorKind::Interrupted".into(),
-        ErrorKind::OutOfMemory => "ErrorKind::OutOfMemory".into(),
-        _ => format!("{:?}", io_err).as_str().into(),
-    }
+// fn handleStdoutErr(io_err: std::io::Error) -> RocStr {
+//     match io_err.kind() {
+//         ErrorKind::BrokenPipe => "ErrorKind::BrokenPipe".into(),
+//         ErrorKind::WouldBlock => "ErrorKind::WouldBlock".into(),
+//         ErrorKind::WriteZero => "ErrorKind::WriteZero".into(),
+//         ErrorKind::Unsupported => "ErrorKind::Unsupported".into(),
+//         ErrorKind::Interrupted => "ErrorKind::Interrupted".into(),
+//         ErrorKind::OutOfMemory => "ErrorKind::OutOfMemory".into(),
+//         _ => format!("{:?}", io_err).as_str().into(),
+//     }
+// }
+fn handleStdoutErr(_: std::io::Error) -> () {
+    ()
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_stdoutLine(text: &RocStr) -> RocResult<(), RocStr> {
+pub extern "C" fn roc_fx_stdoutLine(text: &RocStr) -> RocResult<(), ()> {
     let stdout = std::io::stdout();
 
     let mut handle = stdout.lock();
@@ -291,10 +303,7 @@ pub extern "C" fn roc_fx_stdoutLine(text: &RocStr) -> RocResult<(), RocStr> {
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_stdoutPut(text: &RocStr) -> RocResult<(), RocStr> {
-    let string = text.as_str();
-    println!("{}", string);
-
+pub extern "C" fn roc_fx_stdoutPut(text: &RocStr) -> RocResult<(), ()> {
     let stdout = std::io::stdout();
 
     let mut handle = stdout.lock();
@@ -304,4 +313,93 @@ pub extern "C" fn roc_fx_stdoutPut(text: &RocStr) -> RocResult<(), RocStr> {
         .and_then(|()| handle.flush())
         .map_err(handleStdoutErr)
         .into()
+}
+
+// -------------------------------- Terminal --------------------------------
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalSetRawMode(raw: bool) -> RocResult<(), ()> {
+    if raw {
+        crossterm::terminal::enable_raw_mode().expect("failed to enable raw mode");
+    } else {
+        crossterm::terminal::disable_raw_mode().expect("failed to disable raw mode");
+    }
+    RocResult::ok(())
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalClear() -> RocResult<(), ()> {
+    _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
+    );
+    return RocResult::ok(());
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalSetCursorVisible(visible: bool) -> RocResult<(), ()> {
+    if visible {
+        _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::Show);
+    } else {
+        _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::Hide);
+    }
+    RocResult::ok(())
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalGoto(x: u16, y: u16) -> RocResult<(), ()> {
+    _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::MoveTo(x, y));
+    RocResult::ok(())
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalGetNextKey() -> RocResult<RocStr, ()> {
+    let str = match crossterm::event::poll(Duration::from_millis(1)) {
+        Ok(true) => match crossterm::event::read() {
+            Ok(crossterm::event::Event::Key(key)) => {
+                let result = format!("{:?}", key);
+                result
+            }
+            _ => String::from(""),
+        },
+        _ => String::from(""),
+    };
+
+    RocResult::ok(RocStr::from(str.as_str()))
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalSetForecolor(r: u8, g: u8, b: u8) -> RocResult<(), ()> {
+    _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r: r, g: g, b: b })
+    );
+    RocResult::ok(())
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalResetForecolor() -> RocResult<(), ()> {
+    _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::style::SetForegroundColor(crossterm::style::Color::Reset)
+    );
+    RocResult::ok(())
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalSetBackcolor(r: u8, g: u8, b: u8) -> RocResult<(), ()> {
+    _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r: r, g: g, b: b })
+    );
+    RocResult::ok(())
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_terminalResetBackcolor() -> RocResult<(), ()> {
+    _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::style::SetBackgroundColor(crossterm::style::Color::Reset)
+    );
+    RocResult::ok(())
 }
