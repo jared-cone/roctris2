@@ -41,15 +41,19 @@ pub unsafe extern "C" fn roc_dealloc(c_ptr: *mut c_void, _alignment: u32) {
     libc::free(c_ptr)
 }
 
+fn reset_terminal() {
+    _ = crossterm::terminal::disable_raw_mode();
+    _ = crossterm::execute!(
+        std::io::stdout(),
+        crossterm::style::SetForegroundColor(crossterm::style::Color::Reset),
+        crossterm::style::SetBackgroundColor(crossterm::style::Color::Reset),
+        crossterm::cursor::Show
+    );
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn roc_panic(msg: &RocStr, tag_id: u32) {
-    // _ = crossterm::terminal::disable_raw_mode();
-    // _ = crossterm::execute!(
-    //     std::io::stdout(),
-    //     crossterm::style::SetForegroundColor(crossterm::style::Color::Reset),
-    //     crossterm::style::SetBackgroundColor(crossterm::style::Color::Reset),
-    //     crossterm::cursor::Show
-    // );
+    reset_terminal();
     match tag_id {
         0 => {
             eprintln!("Roc crashed with:\n\n\t{}\n", msg.as_str());
@@ -247,6 +251,8 @@ pub extern "C" fn rust_main() -> i32 {
             std::alloc::dealloc(buffer, layout);
         }
 
+        reset_terminal();
+
         out
     }
 }
@@ -401,5 +407,22 @@ pub extern "C" fn roc_fx_terminalResetBackcolor() -> RocResult<(), ()> {
         std::io::stdout(),
         crossterm::style::SetBackgroundColor(crossterm::style::Color::Reset)
     );
+    RocResult::ok(())
+}
+
+// -------------------------------- Random --------------------------------
+
+#[no_mangle]
+pub extern "C" fn roc_fx_randomU32() -> RocResult<u32, ()> {
+    let result = RocResult::ok(rand::random::<u32>());
+    result
+}
+
+// -------------------------------- Thread --------------------------------
+
+#[no_mangle]
+pub extern "C" fn roc_fx_sleepSeconds(seconds: f64) -> RocResult<(), ()> {
+    let duration = Duration::from_secs_f64(seconds);
+    std::thread::sleep(duration);
     RocResult::ok(())
 }

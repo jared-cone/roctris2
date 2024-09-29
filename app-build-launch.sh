@@ -7,11 +7,26 @@
 # roc build returns 2 for warnings
 RET_WARNING=2
 
+APP_NAME="roctris"
 OUTPUT_DIR="./target"
-OUTPUT_BIN="$OUTPUT_DIR/game-launch"
+OUTPUT_BIN="$OUTPUT_DIR/$APP_NAME"
 mkdir -p "$OUTPUT_DIR"
 
-roc build --linker=legacy --output "$OUTPUT_BIN" ./game/launch.roc
+# run `roc check` first since `roc build` can crash if there are compile errors
+roc check "./game/$APP_NAME.roc"
+ROC_CHECK_STATUS=$?
+
+if [ $ROC_CHECK_STATUS -ne 0 ]; then
+    if [ $ROC_CHECK_STATUS -ne 2 ]; then
+        echo "Roc check failed."
+        exit 1
+    fi
+    echo "Roc check had a warning."
+else
+    echo "Roc check success."
+fi
+
+roc build --linker=legacy --output "$OUTPUT_BIN" "./game/$APP_NAME.roc"
 ROC_BUILD_STATUS=$?
 
 if [ $ROC_BUILD_STATUS -ne 0 ]; then

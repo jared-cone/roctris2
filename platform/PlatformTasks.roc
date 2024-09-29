@@ -11,6 +11,8 @@ hosted PlatformTasks
         terminalResetForecolor,
         terminalSetBackcolor,
         terminalResetBackcolor,
+        randomU32,
+        sleepSeconds,
     ]
     imports []
 
@@ -25,8 +27,12 @@ terminalGoto : U16, U16 -> Task {} {}
 # TODO would be nice to pass back a proper key struct instead of a string
 # KeyType : [Char, Ctrl]
 # Key : {text:Str, type:KeyType}
-terminalGetNextKey : {} -> Task {} {}
+terminalGetNextKey : {} -> Task Str {}
 terminalSetForecolor : U8, U8, U8 -> Task {} {}
 terminalResetForecolor : {} -> Task {} {}
 terminalSetBackcolor : U8, U8, U8 -> Task {} {}
 terminalResetBackcolor : {} -> Task {} {}
+
+randomU32 : {} -> Task U32 {}
+
+sleepSeconds : F64 -> Task {} {}

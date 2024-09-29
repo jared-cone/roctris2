@@ -1,12 +1,11 @@
 platform "host"
-    requires {} { main : Task {} [Exit I32 Str]_ }
+    requires {} { main : Task {} {} }
     exposes [
-        SomeEffect
+        SomeEffect,
     ]
     packages {}
     imports []
     provides [mainForHost]
 
-mainForHost : Task {} I32 as Fx
-mainForHost =
-    Task.attempt main \_ -> Task.err 1
+mainForHost : Task {} {}
+mainForHost = main

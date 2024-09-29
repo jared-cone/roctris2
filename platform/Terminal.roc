@@ -8,6 +8,7 @@ module [
     resetForecolor,
     setBackcolor,
     resetBackcolor,
+    setColors,
 ]
 
 import PlatformTasks
@@ -21,3 +22,7 @@ setForecolor = PlatformTasks.terminalSetForecolor
 resetForecolor = PlatformTasks.terminalResetForecolor
 setBackcolor = PlatformTasks.terminalSetBackcolor
 resetBackcolor = PlatformTasks.terminalResetBackcolor
+
+setColors = \fr, fg, fb, br, bg, bb ->
+    setForecolor! fr fg fb
+    setBackcolor! br bg bb

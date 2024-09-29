@@ -18,3 +18,4 @@ roc_std = { path = "../roc_std" }
 backtrace = "=0.3.69"
 libc = "=0.2.155"
 crossterm = "0.22"
+rand = "0.4.3"
