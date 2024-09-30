@@ -12,13 +12,13 @@ use std::time::Duration;
 
 extern "C" {
     #[link_name = "roc__mainForHost_1_exposed_generic"]
-    pub fn roc_main(output: *mut u8);
+    pub fn roc_main(output: *mut u8, roc_args: *mut u32);
 
     #[link_name = "roc__mainForHost_1_exposed_size"]
     pub fn roc_main_size() -> i64;
 
     #[link_name = "roc__mainForHost_0_caller"]
-    fn call_Fx(flags: *const u8, closure_data: *const u8, output: *mut RocResult<(), i32>);
+    fn call_Fx(flags: *const u8, closure_data: *const u8, output: *mut RocResult<(), ()>);
 }
 
 #[no_mangle]
@@ -237,13 +237,18 @@ pub extern "C" fn rust_main() -> i32 {
     let layout = Layout::array::<u8>(size).unwrap();
 
     unsafe {
+        println!("size: {}", size); // size is 0?
+
         let buffer = if size > 0 {
             std::alloc::alloc(layout)
         } else {
             std::ptr::null()
         } as *mut u8;
 
-        roc_main(buffer);
+        // Hardcoded random seed until I figue out this segfault
+        let mut roc_args: u32 = 500;
+
+        roc_main(buffer, &mut roc_args);
 
         let out = call_the_closure(buffer);
 
@@ -261,8 +266,7 @@ pub extern "C" fn rust_main() -> i32 {
 ///
 /// This function should be passed a pointer to a closure data buffer.
 pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
-    // Main always returns an i32. just allocate for that.
-    let mut out: RocResult<(), i32> = RocResult::ok(());
+    let mut out: RocResult<(), ()> = RocResult::ok(());
 
     call_Fx(
         // This flags pointer will never get dereferenced
@@ -271,10 +275,11 @@ pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
         &mut out,
     );
 
-    match out.into() {
-        Ok(()) => 0,
-        Err(exit_code) => exit_code,
-    }
+    // match out.into() {
+    //     Ok(()) => 0,
+    //     Err(exit_code) => exit_code,
+    // }
+    0
 }
 
 // -------------------------------- Stdout --------------------------------
@@ -408,14 +413,6 @@ pub extern "C" fn roc_fx_terminalResetBackcolor() -> RocResult<(), ()> {
         crossterm::style::SetBackgroundColor(crossterm::style::Color::Reset)
     );
     RocResult::ok(())
-}
-
-// -------------------------------- Random --------------------------------
-
-#[no_mangle]
-pub extern "C" fn roc_fx_randomU32() -> RocResult<u32, ()> {
-    let result = RocResult::ok(rand::random::<u32>());
-    result
 }
 
 // -------------------------------- Thread --------------------------------

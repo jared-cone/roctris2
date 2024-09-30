@@ -11,7 +11,6 @@ hosted PlatformTasks
         terminalResetForecolor,
         terminalSetBackcolor,
         terminalResetBackcolor,
-        randomU32,
         sleepSeconds,
     ]
     imports []
@@ -32,7 +31,5 @@ terminalSetForecolor : U8, U8, U8 -> Task {} {}
 terminalResetForecolor : {} -> Task {} {}
 terminalSetBackcolor : U8, U8, U8 -> Task {} {}
 terminalResetBackcolor : {} -> Task {} {}
-
-randomU32 : {} -> Task U32 {}
 
 sleepSeconds : F64 -> Task {} {}

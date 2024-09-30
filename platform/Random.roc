@@ -1,8 +1,4 @@
-module [randomU32, nextU32, rangeU32]
-
-import PlatformTasks
-
-randomU32 = PlatformTasks.randomU32
+module [nextU32, rangeU32]
 
 nextU32 : U32 -> U32
 nextU32 = \seed ->

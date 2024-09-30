@@ -506,11 +506,8 @@ draw = \model ->
 # Main
 ###############################################
 
-main : Task {} {}
-main =
-    # TODO for some reason the app never makes it past here
-    # randSeed = Random.randomU32! {}
-    randSeed = 123456789u32
-
-    model = newGame randSeed
+main : U32 -> Task {} {}
+main = \seed ->
+    Stdout.line! "Roctris! seed:$(Num.toStr seed)"
+    model = newGame seed
     GameLoop.run! model update draw

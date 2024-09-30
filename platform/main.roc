@@ -1,11 +1,10 @@
 platform "host"
-    requires {} { main : Task {} {} }
+    requires {} { main : U32 -> Task {} {} }
     exposes [
-        SomeEffect,
     ]
     packages {}
     imports []
     provides [mainForHost]
 
-mainForHost : Task {} {}
+mainForHost : U32 -> Task {} {}
 mainForHost = main
